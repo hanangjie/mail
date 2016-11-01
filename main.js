@@ -4,7 +4,7 @@ var fs=require("fs")
 // 设置邮件内容
 var content=require("./config.js")
 var startQQ="",optionIndex=0;
-var errorNum=0,successNum=1;
+var errorNum=0,successNum=0;
 fs.readFile('./number.txt', (err, data) => {
   if (err)console.log(err);
   startQQ=data.toString();
@@ -12,11 +12,14 @@ fs.readFile('./number.txt', (err, data) => {
   fs.readFile('./bin.txt', (err, data) => {
     if (err)console.log(err);
     var option=JSON.parse(data.toString());
-    send(option[optionIndex])
+    send(option)
   });
 });
-//send(startQQ)
+
 function send(option){
+  writeNumber(startQQ);
+  var opt=option;
+  option=option[optionIndex]
   var smtpTransport = nodemailer.createTransport('smtps://'+option.name+'%40'+option.domain+':'+option.pwd+'@smtp.'+option.domain+'');
   var mailOptions = {
     from: "Fred Foo <"+option.name+"@"+option.domain+">", // 发件地址
@@ -32,12 +35,12 @@ function send(option){
       if(error.toString().indexOf("limited")<0){
           startQQ++
           setTimeout(function(){
-            send(option)
+            send(opt)
           },1000)
       }else{
         optionIndex++;
-        if(option[optionIndex]){
-          send(option[optionIndex])
+        if(opt[optionIndex]){
+          send(opt)
         }else{
           writeNumber(startQQ);
         }
@@ -47,7 +50,7 @@ function send(option){
       console.log("Message sent: from:" +option.name+"@"+option.domain+",to:"+startQQ);
       startQQ++
       setTimeout(function(){
-        send(option)
+        send(opt)
       },1000)
     }
     smtpTransport.close(); // 如果没用，关闭连接池
@@ -57,7 +60,7 @@ function send(option){
 function writeNumber(num){
     fs.writeFile('./number.txt', num, (err) => {
       if (err)consol.log("writeTxt:"+err);
-      console.log('It\'s saved!'+num+"error:"+errorNum+",success:"+successNum,);
+      console.log('It\'s saved!'+num+"error:"+errorNum+",success:"+successNum);
     });
 }
 // 发送邮件
