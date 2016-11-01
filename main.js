@@ -3,7 +3,8 @@ var fs=require("fs")
 
 // 设置邮件内容
 var content=require("./config.js")
-var startQQ="";
+var startQQ="",optionIndex=0;
+var errorNum=0,successNum=1;
 fs.readFile('./number.txt', (err, data) => {
   if (err)console.log(err);
   startQQ=data.toString();
@@ -11,8 +12,7 @@ fs.readFile('./number.txt', (err, data) => {
   fs.readFile('./bin.txt', (err, data) => {
     if (err)console.log(err);
     var option=JSON.parse(data.toString());
-    console.log(option[0].name)
-    send(option[0])
+    send(option[optionIndex])
   });
 });
 //send(startQQ)
@@ -25,32 +25,39 @@ function send(option){
     html: content.html // html 内容
   }
  
-  smtpTransport.sendMail(option.mailOptions, function(error, response){
+  smtpTransport.sendMail(mailOptions, function(error, response){
     if(error){
-      console.log(error+"数字:"+startQQ);
+      errorNum++
+      console.log(error+"\n error sent: from:" +option.name+"@"+option.domain+",to:"+startQQ);
       if(error.toString().indexOf("limited")<0){
+          startQQ++
           setTimeout(function(){
             send(option)
           },1000)
       }else{
-        writeNumber(startQQ);
-        send(option)
+        optionIndex++;
+        if(option[optionIndex]){
+          send(option[optionIndex])
+        }else{
+          writeNumber(startQQ);
+        }
       }
     }else{
-      console.log("Message sent: " + response.message+"数字"+startQQ);
+      successNum++;
+      console.log("Message sent: from:" +option.name+"@"+option.domain+",to:"+startQQ);
+      startQQ++
       setTimeout(function(){
         send(option)
       },1000)
     }
     smtpTransport.close(); // 如果没用，关闭连接池
   });
-  startQQ++
 }
 
 function writeNumber(num){
     fs.writeFile('./number.txt', num, (err) => {
       if (err)consol.log("writeTxt:"+err);
-      console.log('It\'s saved!');
+      console.log('It\'s saved!'+num+"error:"+errorNum+",success:"+successNum,);
     });
 }
 // 发送邮件
