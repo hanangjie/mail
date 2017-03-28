@@ -33,7 +33,7 @@ function send(option){
       errorNum++
       console.log(error+"\n error sent: from:" +option.name+"@"+option.domain+",to:"+startQQ);
       if(error.toString().indexOf("limited")<0){
-          startQQ++
+          //startQQ++
           setTimeout(function(){
             send(opt)
           },1000)
